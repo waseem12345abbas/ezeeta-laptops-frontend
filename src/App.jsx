@@ -1,0 +1,111 @@
+import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import "./App.css";
+import Header from "./components/Layout/Header";
+import HomePage from "./pages/User/HomePage";
+import Footer from "./components/Layout/Footer";
+import ContactPage from "./pages/User/ContactPage";
+import AboutPage from "./pages/User/AboutPage";
+import PrivacyPolicyPage from "./pages/User/PrivacyPolicyPage";
+import ErrorPage from "./pages/User/ErrorPage";
+import AdminLayout from "./components/Layout/AdminLayout";
+import Dashboard from "./components/admin/Dashboard";
+import ManageMenu from "./pages/Admin/ManageMenu";
+import ManageUsers from "./pages/Admin/ManageUsers";
+import Register from "./components/Authentication/Register";
+import Login from "./components/Authentication/SignIn";
+import Cart from "./pages/User/Cart";
+import Success from "./pages/User/Success";
+import Cancel from "./pages/User/Cancel";
+import ProofOfOrder from "./pages/User/ProofOfOrder";
+import MyOrder from "./pages/User/MyOrder";
+import ProfilePage from "./pages/ProfilePage";
+import PrivateRoute from "./auth/PrivateRoute";
+import AdminRoute from "./auth/AdminRoute";
+import AuthProvider from "./auth/AuthProvider";
+
+
+import DeliveryAddress from "./pages/User/DeliveryAddress";
+import ProductDetails from "./pages/User/ProductDetails";
+import OrderList from "./components/admin/OrderList";
+import AddNewItem from "./components/admin/AddNewItem";
+
+
+function Layout({ toggleTheme, darkMode }) {
+  const location = useLocation();
+  const hideNavbarFooter = location.pathname.startsWith('/admin')
+  ||
+  ["/login","/register"].includes(location.pathname);
+  return (
+    <>
+      {!hideNavbarFooter && <Header toggleTheme={toggleTheme} darkMode={darkMode} />}
+      <Routes>
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+
+        <Route path="/cart" element={<Cart/>}/>
+        <Route path="/delivery-address" element={<DeliveryAddress />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/register" element={<Register/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/success" element={<Success />} />
+        <Route path="/cancel" element={<Cancel />} />
+        <Route path="/proof-of-order" element={<ProofOfOrder />} />
+        <Route path="/my-order" element={
+          <PrivateRoute>
+            <MyOrder/>
+          </PrivateRoute>
+        }/>
+        <Route path="*" element={<ErrorPage />} />
+        <Route path="/profile" element={
+          <PrivateRoute>
+            <ProfilePage/>
+          </PrivateRoute>
+        }/>
+        {/* route for admin panel */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }>
+          <Route index element={<Dashboard />} />
+          <Route path="menu" element={<ManageMenu />} />
+          <Route path="users" element={<ManageUsers />} />
+          <Route path="orders" element={<OrderList/>}/>
+          <Route path="new" element={<AddNewItem/>}/>
+
+        </Route>
+      </Routes>
+      {!hideNavbarFooter && <Footer />}
+    </>
+  );
+}
+function App({ children }) {
+    const [darkMode, setDarkMode] = useState(()=>{
+    // load theme from localstorage
+    return localStorage.getItem("theme")==="dark"
+  })
+  useEffect(()=>{
+    if(darkMode){
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark")
+    }else{
+      document.documentElement.classList.remove("dark")
+      localStorage.setItem("theme", "light")
+    }
+  },[darkMode])
+
+  return (
+    <div className="bg-primary-bg dark:bg-secondary-bg overflow-hidden">
+      <BrowserRouter>
+      <AuthProvider>
+          <Layout toggleTheme={()=> setDarkMode(!darkMode)} darkMode={darkMode}/>
+      </AuthProvider>
+      </BrowserRouter>
+    </div>
+  );
+}
+
+export default App;

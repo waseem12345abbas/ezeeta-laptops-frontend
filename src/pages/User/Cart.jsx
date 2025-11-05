@@ -1,0 +1,148 @@
+import { useSelector, useDispatch } from "react-redux";
+import { removeToCart, addToCart, decreaseQuantity } from "../../state_manage/features/cart/Cart";
+import { useNavigate } from "react-router-dom";
+import { FaTimes, FaMinus, FaPlus } from "react-icons/fa";
+
+
+const Cart = () => {
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state) => state.cart.cart);
+  // select user session from redux store if user wants delivery then navigate user to delivery address page 
+  // otherwise navigate to order proof page
+  const userSession = useSelector((state)=>state.userSession)
+  const navigate = useNavigate();
+  // const { user, isAuthed } = useAuth();
+  const deliveryFee = 1.0;
+  const totalPrice =
+    cartItems.reduce((total, item) => total + item.price * item.quantity, 0) +
+    deliveryFee;
+  const handlePlaceOrder = () => {
+    // Always navigate to address page
+    navigate("/delivery-address", {
+      state: { cartItems},
+    });
+  };
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <h1 className="text-3xl font-bold mb-6 text-black text-center pt-5 pb-10">
+        Your Shopping Cart
+      </h1>
+
+      {cartItems.length === 0 ? (
+  <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-b from-blue-400 to-blue-500 rounded-xl shadow-md mx-auto max-w-md">
+    <img
+      src="https://cdn-icons-png.flaticon.com/512/2038/2038854.png"
+      alt="Empty Cart"
+      className="w-40 h-40 mb-6 animate-bounce-slow"
+    />
+    <h2 className="text-2xl font-bold text-black mb-2">Your Cart is Empty!</h2>
+    <p className="text-gray-700 text-center mb-6 px-6">
+      Looks like you haven’t added anything yet.
+      Explore our latest laptops and add your favorite items!
+    </p>
+    <button
+      onClick={() => navigate("/")}
+      className="bg-blue-400 hover:bg-blue-500 text-black font-semibold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105"
+    >
+      Browse Laptops
+    </button>
+  </div>
+) : (
+  // your existing cart display section
+
+        <div className="flex flex-col md:flex-row shadow-md shadow-neutral-500 rounded-lg bg-neutral-300">
+          <div className="flex-2 flex flex-col">
+            {cartItems.map((item) => (
+              <div
+                key={item._id}
+                className="overflow-hidden flex flex-row items-center border border-neutral-200 rounded-md"
+              >
+                 {/* Image */}
+              <div className="sm:w-40 w-full h-40 bg-gray-50 flex items-center justify-center relative group rounded-2xl">
+                <img
+                  src={
+                    item.images?.[0] ||
+                    item.image?.[0] ||
+                    item.image ||
+                    "https://cdn-icons-png.flaticon.com/512/4260/4260884.png"
+                  }
+                  alt={item.name}
+                  className="w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 rounded-lg bg-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+
+                <div className="p-4 flex flex-col justify-between flex-grow">
+                  <div className="flex items-center justify-between mr-2">
+                    <h2 className="text-lg font-semibold text-black mb-2 w-30 text-wrap">
+                      {item.name}
+                    </h2>
+                    <div className="flex items-center space-x-4">
+                    <button
+                      onClick={()=>dispatch(addToCart(item))}
+                      className="py-2 px-4 cursor-pointer bg-blue-400 rounded-md text-black shadow-[0_4px_4px_0] shadow-blue-900  hover:scale-105 transition text-xs"><FaPlus/></button>
+                      <span className="text-black font-bold text-lg">
+                        {item.quantity}
+                      </span>
+                      <button
+                      onClick={()=>dispatch(decreaseQuantity(item._id))}
+                      className="py-2 px-4 cursor-pointer bg-blue-400 rounded-md text-white shadow-[0_4px_4px_0] shadow-blue-900  hover:scale-105 transition text-xs"><FaMinus/></button>
+                    </div>
+                      <button
+                    onClick={() => dispatch(removeToCart(item._id))}
+                    className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-md shadow-[0_4px_4px_0] shadow-blue-900 hover:scale-105 transition text-sm cursor-pointer"
+                  >
+                    <FaTimes/>
+                  </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right: Order Summary */}
+          <div className="w-full md:w-96 p-6 rounded-r rounded-lg flex-1 bg-blue-400">
+            <h2 className="text-center text-2xl font-semibold mb-6">Order Summary</h2>
+            <ul className="space-y-4 overflow-y-auto pr-2">
+              {cartItems.map((item) => (
+                <li
+                  key={item._id}
+                  className="flex justify-between items-center border-b pb-2"
+                >
+                  <div>
+                    <p className="font-medium">{item.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Qty: {item.quantity}
+                    </p>
+                  </div>
+                  <p className="font-semibold">
+                    RS{(item.discountPrice || item.price) * item.quantity}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-base font-semibold">Delivery Fee</span>
+              <span className="pr-2 font-semibold">
+                RS{deliveryFee.toFixed(2)}
+              </span>
+            </div>
+            <div className="border-t mt-6 pt-4 flex justify-between text-lg font-bold">
+              <span>Total:</span>
+              <span>RS{totalPrice.toFixed(2)}</span>
+            </div>
+
+            <button
+              onClick={handlePlaceOrder}
+              className="w-full mt-6 bg-white hover:bg-neutral-200 text-black shadow-b-lg cursor-pointer shadow-neutral-500 py-3 rounded-xl font-semibold transition duration-300 shadow-md"
+            >
+              Place Order
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Cart;

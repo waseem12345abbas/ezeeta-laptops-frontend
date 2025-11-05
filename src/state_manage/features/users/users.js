@@ -1,0 +1,58 @@
+// here I'll fetch users by making api call to the backend
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../../../api';
+
+// fetch users from the backend
+export const fetchUsers = createAsyncThunk(
+  'users/fetchUsers',
+  async (_, { rejectWithValue }) => {
+    try {
+        const response= await api.get('/api/users')
+        if(response.data.success){
+            return response.data.data
+        }else{
+            return rejectWithValue("API returned unsuccessful response")
+        }
+    } catch (error) {
+        return rejectWithValue(
+            error.response ? error.response.data : 'Network error'
+        );
+    }
+  }
+)
+
+// create a slice for users
+const usersSlice = createSlice({
+    name: 'users',
+    initialState:{
+        users: [],
+        currentUser: null,
+        status: 'idle', // idle | loading | succeeded | failed
+        error: null,
+    },
+    reducers:{
+        setUserData: (state , action)=>{
+            state.currentUser = action.payload
+        },
+        clearUserData: (state)=>{
+            state.currentUser = null
+        }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchUsers.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchUsers.fulfilled, (state, action) => {
+                state.status = 'success';
+                state.users = action.payload;
+            })
+            .addCase(fetchUsers.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            });
+        }
+})
+
+export const { setUserData, clearUserData} = usersSlice.actions
+export default usersSlice.reducer;
